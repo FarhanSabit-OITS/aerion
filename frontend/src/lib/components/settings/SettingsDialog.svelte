@@ -5,10 +5,11 @@
   import * as Tabs from '$lib/components/ui/tabs'
   import { Button } from '$lib/components/ui/button'
   // @ts-ignore - wailsjs path
-  import { GetReadReceiptResponsePolicy, SetReadReceiptResponsePolicy, GetMarkAsReadDelay, SetMarkAsReadDelay, GetMessageListDensity, SetMessageListDensity, GetThemeMode, SetThemeMode, GetShowTitleBar, SetShowTitleBar, GetRunBackground, SetRunBackground, GetStartHidden, SetStartHidden, GetAutostart, SetAutostart, GetLanguage, SetLanguage, GetComposerMode, SetComposerMode, GetMailtoMode, SetMailtoMode, GetComposerFormat, SetComposerFormat } from '../../../../wailsjs/go/app/App.js'
+  import { GetReadReceiptResponsePolicy, SetReadReceiptResponsePolicy, GetMarkAsReadDelay, SetMarkAsReadDelay, GetMessageListDensity, SetMessageListDensity, GetThemeMode, SetThemeMode, GetShowTitleBar, SetShowTitleBar, GetRunBackground, SetRunBackground, GetStartHidden, SetStartHidden, GetAutostart, SetAutostart, GetLanguage, SetLanguage, GetComposerMode, SetComposerMode, GetMailtoMode, SetMailtoMode, GetComposerFormat, SetComposerFormat, GetNativeTitleBar, SetNativeTitleBar, GetAlwaysLoadImages, SetAlwaysLoadImages, QuitApp } from '../../../../wailsjs/go/app/App.js'
   import { addToast } from '$lib/stores/toast'
-  import { setMessageListDensity as updateDensityStore, setThemeMode as updateThemeStore, setShowTitleBar as updateShowTitleBarStore, setRunBackground as updateRunBackgroundStore, setStartHidden as updateStartHiddenStore, setAutostart as updateAutostartStore, setLanguage as updateLanguageStore, setComposerMode as updateComposerModeStore, setMailtoMode as updateMailtoModeStore, setComposerFormat as updateComposerFormatStore, type MessageListDensity, type ThemeMode, type ComposerMode, type ComposerFormat } from '$lib/stores/settings.svelte'
+  import { setMessageListDensity as updateDensityStore, setThemeMode as updateThemeStore, setShowTitleBar as updateShowTitleBarStore, setRunBackground as updateRunBackgroundStore, setStartHidden as updateStartHiddenStore, setAutostart as updateAutostartStore, setLanguage as updateLanguageStore, setComposerMode as updateComposerModeStore, setMailtoMode as updateMailtoModeStore, setComposerFormat as updateComposerFormatStore, setNativeTitleBar as updateNativeTitleBarStore, setAlwaysLoadImages as updateAlwaysLoadImagesStore, type MessageListDensity, type ThemeMode, type ComposerMode, type ComposerFormat } from '$lib/stores/settings.svelte'
   import { _ } from '$lib/i18n'
+  import ConfirmDialog from '$lib/components/ui/confirm-dialog/ConfirmDialog.svelte'
   import GeneralTab from './GeneralTab.svelte'
   import ComposerTab from './ComposerTab.svelte'
   import AccountsTab from './AccountsTab.svelte'
@@ -40,6 +41,10 @@
   let composerMode = $state<string>('inline')
   let mailtoMode = $state<string>('inline')
   let composerFormat = $state<string>('rich')
+  let nativeTitleBar = $state<boolean>(false)
+  let alwaysLoadImages = $state<boolean>(false)
+  let originalNativeTitleBar = false
+  let showRestartDialog = $state(false)
   let loading = $state(true)
   let saving = $state(false)
   let activeTab = $state('general')
@@ -59,7 +64,7 @@
   async function loadSettings() {
     loading = true
     try {
-      const [policy, delayMs, density, theme, titleBar, runBg, startHid, autoSt, lang, comp, mail, compFmt] = await Promise.all([
+      const [policy, delayMs, density, theme, titleBar, runBg, startHid, autoSt, lang, comp, mail, compFmt, nativeTB, alwaysImages] = await Promise.all([
         GetReadReceiptResponsePolicy(),
         GetMarkAsReadDelay(),
         GetMessageListDensity(),
@@ -72,6 +77,8 @@
         GetComposerMode(),
         GetMailtoMode(),
         GetComposerFormat(),
+        GetNativeTitleBar(),
+        GetAlwaysLoadImages(),
       ])
       readReceiptResponsePolicy = policy
       // Convert ms to seconds for display
@@ -86,6 +93,9 @@
       composerMode = comp || 'inline'
       mailtoMode = mail || 'inline'
       composerFormat = compFmt || 'rich'
+      nativeTitleBar = nativeTB ?? false
+      alwaysLoadImages = alwaysImages ?? false
+      originalNativeTitleBar = nativeTitleBar
     } catch (err) {
       console.error('Failed to load settings:', err)
     } finally {
@@ -114,6 +124,8 @@
       await SetComposerMode(composerMode)
       await SetMailtoMode(mailtoMode)
       await SetComposerFormat(composerFormat)
+      await SetNativeTitleBar(nativeTitleBar)
+      await SetAlwaysLoadImages(alwaysLoadImages)
       // Update the reactive stores so UI updates immediately
       updateDensityStore(messageListDensity as MessageListDensity)
       updateThemeStore(themeMode as ThemeMode)
@@ -127,10 +139,18 @@
       updateComposerModeStore(composerMode as ComposerMode)
       updateMailtoModeStore(mailtoMode as ComposerMode)
       updateComposerFormatStore(composerFormat as ComposerFormat)
+      updateNativeTitleBarStore(nativeTitleBar)
+      updateAlwaysLoadImagesStore(alwaysLoadImages)
       addToast({
         type: 'success',
         message: $_('toast.settingsSaved'),
       })
+      // Show restart dialog if native title bar setting changed
+      if (nativeTitleBar !== originalNativeTitleBar) {
+        originalNativeTitleBar = nativeTitleBar
+        showRestartDialog = true
+        return
+      }
       open = false
       onClose?.()
     } catch (err) {
@@ -201,19 +221,22 @@
               bind:markAsReadDelaySeconds
               bind:messageListDensity
               bind:themeMode
+              bind:nativeTitleBar
               bind:showTitleBar
               bind:runBackground
               bind:startHidden
               bind:autostart
               bind:language
+              bind:alwaysLoadImages
               onDelayChange={(v) => markAsReadDelaySeconds = v}
               onDensityChange={(v) => messageListDensity = v}
               onThemeChange={(v) => themeMode = v}
-              onShowTitleBarChange={(v) => showTitleBar = v}
+              onTitleBarChange={(ntb, stb) => { nativeTitleBar = ntb; showTitleBar = stb }}
               onRunBackgroundChange={(v) => { runBackground = v; if (!v) startHidden = false }}
               onStartHiddenChange={(v) => { startHidden = v; if (v) runBackground = true }}
               onAutostartChange={(v) => autostart = v}
               onLanguageChange={(v) => language = v}
+              onAlwaysLoadImagesChange={(v) => alwaysLoadImages = v}
             />
           </Tabs.Content>
 
@@ -267,3 +290,13 @@
     {/if}
   </Dialog.Content>
 </Dialog.Root>
+
+<ConfirmDialog
+  bind:open={showRestartDialog}
+  title={$_('settingsGeneral.restartRequired')}
+  description={$_('settingsGeneral.restartRequiredDescription')}
+  confirmLabel={$_('settingsGeneral.quitNow')}
+  cancelLabel={$_('settingsGeneral.restartLater')}
+  onConfirm={() => QuitApp()}
+  onCancel={() => { showRestartDialog = false; open = false; onClose?.() }}
+/>

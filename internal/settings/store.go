@@ -9,6 +9,7 @@ import (
 	"github.com/hkdb/aerion/internal/database"
 	"github.com/hkdb/aerion/internal/logging"
 	"github.com/rs/zerolog"
+	_ "modernc.org/sqlite"
 )
 
 // Known setting keys
@@ -27,6 +28,8 @@ const (
 	KeyComposerMode              = "composer_mode"
 	KeyMailtoMode                = "mailto_mode"
 	KeyComposerFormat            = "composer_format"
+	KeyNativeTitleBar            = "native_titlebar"
+	KeyAlwaysLoadImages          = "always_load_images"
 )
 
 // Density values for message list
@@ -54,9 +57,11 @@ const (
 	ThemeModeSystem      = "system"
 	ThemeModeLight       = "light"        // Default light purple
 	ThemeModeLightBlue   = "light-blue"   // New
-	ThemeModeLightOrange = "light-orange" // New
-	ThemeModeDark        = "dark"         // Default dark purple
-	ThemeModeDarkGray    = "dark-gray"    // New
+	ThemeModeLightOrange   = "light-orange"   // New
+	ThemeModeLightBalanced = "light-balanced" // New
+	ThemeModeDark          = "dark"           // Default dark purple
+	ThemeModeDarkGray     = "dark-gray"     // New
+	ThemeModeDarkBalanced = "dark-balanced" // New
 )
 
 // DefaultThemeMode is the default theme mode
@@ -239,11 +244,13 @@ func (s *Store) GetThemeMode() (string, error) {
 
 // SetThemeMode sets the theme mode
 func (s *Store) SetThemeMode(mode string) error {
-	if mode != ThemeModeSystem && mode != ThemeModeLight && mode != ThemeModeLightBlue &&
-		mode != ThemeModeLightOrange && mode != ThemeModeDark && mode != ThemeModeDarkGray {
-		return fmt.Errorf("invalid theme mode: %s (must be 'system', 'light', 'light-blue', 'light-orange', 'dark', or 'dark-gray')", mode)
+	switch mode {
+	case ThemeModeSystem, ThemeModeLight, ThemeModeLightBlue, ThemeModeLightOrange, ThemeModeLightBalanced,
+		ThemeModeDark, ThemeModeDarkGray, ThemeModeDarkBalanced:
+		return s.Set(KeyThemeMode, mode)
+	default:
+		return fmt.Errorf("invalid theme mode: %s (must be 'system', 'light', 'light-blue', 'light-orange', 'light-balanced', 'dark', 'dark-gray', or 'dark-balanced')", mode)
 	}
-	return s.Set(KeyThemeMode, mode)
 }
 
 // GetShowTitleBar returns whether the title bar should be shown
@@ -408,4 +415,58 @@ func (s *Store) SetComposerFormat(format string) error {
 		return fmt.Errorf("invalid composer format: %s (must be 'rich' or 'plain')", format)
 	}
 	return s.Set(KeyComposerFormat, format)
+}
+
+// GetNativeTitleBar returns whether the native OS title bar should be used
+func (s *Store) GetNativeTitleBar() (bool, error) {
+	value, err := s.Get(KeyNativeTitleBar)
+	if err != nil {
+		return false, err
+	}
+	return value == "true", nil
+}
+
+// SetNativeTitleBar sets whether the native OS title bar should be used
+func (s *Store) SetNativeTitleBar(enabled bool) error {
+	value := "false"
+	if enabled {
+		value = "true"
+	}
+	return s.Set(KeyNativeTitleBar, value)
+}
+
+// GetAlwaysLoadImages returns whether remote images should always be loaded
+func (s *Store) GetAlwaysLoadImages() (bool, error) {
+	value, err := s.Get(KeyAlwaysLoadImages)
+	if err != nil {
+		return false, err
+	}
+	return value == "true", nil
+}
+
+// SetAlwaysLoadImages sets whether remote images should always be loaded
+func (s *Store) SetAlwaysLoadImages(enabled bool) error {
+	value := "false"
+	if enabled {
+		value = "true"
+	}
+	return s.Set(KeyAlwaysLoadImages, value)
+}
+
+// ReadNativeTitleBar opens the database directly to read the native_titlebar setting.
+// Used in main.go before wails.Run() when the full DB isn't initialized yet.
+// Returns false on any error (first run, missing DB, etc.).
+func ReadNativeTitleBar(dbPath string) bool {
+	db, err := sql.Open("sqlite", dbPath)
+	if err != nil {
+		return false
+	}
+	defer db.Close()
+
+	var value string
+	err = db.QueryRow("SELECT value FROM settings WHERE key = ?", KeyNativeTitleBar).Scan(&value)
+	if err != nil {
+		return false
+	}
+	return value == "true"
 }

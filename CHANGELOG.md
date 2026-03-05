@@ -1,6 +1,20 @@
 # CHANGELOG
 
 
+**v0.1.30 - 03-05-2026**
+---
+
+- Extracted theme logic from App.svelte into a dedicated Svelte store
+- Added a Dark (Balanced) theme
+- Added a Light (Balanced) theme
+- Added tables and HTML mode to signature composer
+- Added option to use native title bar/decorations - [#53](https://github.com/hkdb/aerion/issues/53)
+- Added display of reply-to, cc, and bcc if not empty - [#54](https://github.com/hkdb/aerion/issues/54)
+- Added always load image setting - [#40](https://github.com/hkdb/aerion/issues/40)
+- Fixed Cosmic Desktop bug - needs testing - [#55](https://github.com/hkdb/aerion/issues/55)
+- Added workaround instructions for GPU driver bugs - [#56](https://github.com/hkdb/aerion/issues/56)
+
+
 **v0.1.29 - 02-26-2026**
 ---
 

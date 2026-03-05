@@ -63,6 +63,57 @@ export const ExtendedColor = Color.extend({
   },
 })
 
+/**
+ * Extended Table extensions to preserve inline style attributes
+ */
+const ExtendedTable = Table.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      style: {
+        default: null,
+        parseHTML: (element: HTMLElement) => element.getAttribute('style'),
+        renderHTML: (attributes: Record<string, string>) => {
+          if (!attributes.style) return {}
+          return { style: attributes.style }
+        },
+      },
+    }
+  },
+})
+
+const ExtendedTableCell = TableCell.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      style: {
+        default: null,
+        parseHTML: (element: HTMLElement) => element.getAttribute('style'),
+        renderHTML: (attributes: Record<string, string>) => {
+          if (!attributes.style) return {}
+          return { style: attributes.style }
+        },
+      },
+    }
+  },
+})
+
+const ExtendedTableHeader = TableHeader.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      style: {
+        default: null,
+        parseHTML: (element: HTMLElement) => element.getAttribute('style'),
+        renderHTML: (attributes: Record<string, string>) => {
+          if (!attributes.style) return {}
+          return { style: attributes.style }
+        },
+      },
+    }
+  },
+})
+
 export interface ComposerEditorHandlers {
   onUpdate?: () => void
   onPasteImage?: (file: File) => void
@@ -90,12 +141,12 @@ export function createComposerEditor(
       TextAlign.configure({
         types: ['paragraph'],
       }),
-      Table.configure({
+      ExtendedTable.configure({
         resizable: false,
       }),
       TableRow,
-      TableCell,
-      TableHeader,
+      ExtendedTableCell,
+      ExtendedTableHeader,
       Link.configure({
         openOnClick: false,
       }),

@@ -146,6 +146,7 @@
     "to": "給",
     "cc": "副本",
     "bcc": "密件副本",
+    "replyTo": "回覆至",
     "from": "寄件人",
     "date": "日期",
     "subject": "主旨",
@@ -397,8 +398,14 @@
   },
   "settingsGeneral": {
     "display": "顯示",
-    "showTitleBar": "顯示標題列",
-    "showTitleBarHelp": "停用以減少界面雜亂",
+    "titleBar": "標題列",
+    "titleBarHelp": "選擇標題列樣式（原生需要重新啟動）",
+    "titleBarAerion": "Aerion",
+    "titleBarAerionDesc": "使用應用程式標題列",
+    "titleBarNative": "原生",
+    "titleBarNativeDesc": "使用作業系統原生標題列（需要重新啟動）",
+    "titleBarDisable": "停用",
+    "titleBarDisableDesc": "停用以減少界面雜亂",
     "language": "語言",
     "theme": "佈景主題",
     "themeHelp": "選擇淺色、深色或跟隨系統偏好設定",
@@ -432,8 +439,19 @@
     "themeLight": "淺色",
     "themeLightBlue": "淺色（藍色）",
     "themeLightOrange": "淺色（橙色）",
+    "themeLightBalanced": "淺色（平衡）",
     "themeDark": "深色",
-    "themeDarkGray": "深色（灰色）"
+    "themeDarkGray": "深色（灰色）",
+    "themeDarkBalanced": "深色（平衡）",
+    "restartRequired": "需要重新啟動",
+    "restartRequiredDescription": "標題列變更將在重新啟動 Aerion 後生效。",
+    "quitNow": "立即退出",
+    "restartLater": "稍後",
+    "alwaysLoadImages": "總是載入遠端圖片",
+    "alwaysLoadImagesHelp": "停用所有電子郵件嘅圖片封鎖。遠端圖片將自動載入。",
+    "alwaysLoadImagesWarningTitle": "私隱與安全風險",
+    "alwaysLoadImagesWarningDescription": "自動載入遠端圖片可能會暴露你嘅 IP 地址、確認你已讀取郵件，並允許寄件者追蹤你。確定要停用圖片封鎖嗎？",
+    "disable": "停用"
   },
   "settingsAccounts": {
     "emailAccounts": "電子郵件帳戶",
@@ -897,7 +915,11 @@
     "switchToPlainText": "切換至純文字",
     "insertImageUrl": "從網址插入圖片",
     "insertImageFile": "從檔案插入圖片",
-    "removeLink": "移除連結"
+    "removeLink": "移除連結",
+    "insertTable": "插入表格",
+    "deleteTable": "刪除表格",
+    "htmlMode": "編輯 HTML 原始碼",
+    "visualMode": "視覺化編輯器"
   },
   "attachment": {
     "open": "開啟",

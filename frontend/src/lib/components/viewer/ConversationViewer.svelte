@@ -1255,21 +1255,73 @@
                       {/if}
                     </div>
 
+                    {#if msg.replyTo && msg.replyTo.toLowerCase() !== msg.fromEmail.toLowerCase()}
+                      <div class="text-sm text-muted-foreground flex flex-wrap items-center gap-1">
+                        <span class="opacity-60">{$_('viewer.replyTo')}</span>
+                        <span
+                          role="button"
+                          tabindex="0"
+                          class="hover:text-primary hover:underline cursor-pointer text-muted-foreground"
+                          title={$_('viewer.copyEmail')}
+                          onclick={(e) => { e.stopPropagation(); copyToClipboard(msg.replyTo!, $_('viewer.replyTo')) }}
+                          onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); copyToClipboard(msg.replyTo!, $_('viewer.replyTo')) }}}
+                        >{msg.replyTo}</span>
+                      </div>
+                    {/if}
+
                     {#if msg.toList}
                       {@const recipients = parseRecipients(msg.toList)}
                       <div class="text-sm text-muted-foreground flex flex-wrap items-center gap-1">
-                        <span>{$_('viewer.to')}</span>
+                        <span class="opacity-60">{$_('viewer.to')}</span>
                         {#each recipients as recipient, i}
                           <span
                             role="button"
                             tabindex="0"
                             class="hover:text-primary hover:underline cursor-pointer text-muted-foreground"
                             title={$_('viewer.copyEmail')}
-                            onclick={(e) => { e.stopPropagation(); copyToClipboard(formatEmailForCopy(recipient.name, recipient.email), $_('viewer.from')) }}
-                            onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); copyToClipboard(formatEmailForCopy(recipient.name, recipient.email), $_('viewer.from')) }}}
+                            onclick={(e) => { e.stopPropagation(); copyToClipboard(formatEmailForCopy(recipient.name, recipient.email), $_('viewer.to')) }}
+                            onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); copyToClipboard(formatEmailForCopy(recipient.name, recipient.email), $_('viewer.to')) }}}
                           >{recipient.name || recipient.email}{i < recipients.length - 1 ? ',' : ''}</span>
                         {/each}
                       </div>
+                    {/if}
+
+                    {#if msg.ccList}
+                      {@const ccRecipients = parseRecipients(msg.ccList)}
+                      {#if ccRecipients.length > 0}
+                        <div class="text-sm text-muted-foreground flex flex-wrap items-center gap-1">
+                          <span class="opacity-60">{$_('viewer.cc')}</span>
+                          {#each ccRecipients as recipient, i}
+                            <span
+                              role="button"
+                              tabindex="0"
+                              class="hover:text-primary hover:underline cursor-pointer text-muted-foreground"
+                              title={$_('viewer.copyEmail')}
+                              onclick={(e) => { e.stopPropagation(); copyToClipboard(formatEmailForCopy(recipient.name, recipient.email), $_('viewer.cc')) }}
+                              onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); copyToClipboard(formatEmailForCopy(recipient.name, recipient.email), $_('viewer.cc')) }}}
+                            >{recipient.name || recipient.email}{i < ccRecipients.length - 1 ? ',' : ''}</span>
+                          {/each}
+                        </div>
+                      {/if}
+                    {/if}
+
+                    {#if msg.bccList}
+                      {@const bccRecipients = parseRecipients(msg.bccList)}
+                      {#if bccRecipients.length > 0}
+                        <div class="text-sm text-muted-foreground flex flex-wrap items-center gap-1">
+                          <span class="opacity-60">{$_('viewer.bcc')}</span>
+                          {#each bccRecipients as recipient, i}
+                            <span
+                              role="button"
+                              tabindex="0"
+                              class="hover:text-primary hover:underline cursor-pointer text-muted-foreground"
+                              title={$_('viewer.copyEmail')}
+                              onclick={(e) => { e.stopPropagation(); copyToClipboard(formatEmailForCopy(recipient.name, recipient.email), $_('viewer.bcc')) }}
+                              onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); copyToClipboard(formatEmailForCopy(recipient.name, recipient.email), $_('viewer.bcc')) }}}
+                            >{recipient.name || recipient.email}{i < bccRecipients.length - 1 ? ',' : ''}</span>
+                          {/each}
+                        </div>
+                      {/if}
                     {/if}
                     
                     {#if !isExpanded}

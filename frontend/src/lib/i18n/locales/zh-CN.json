@@ -146,6 +146,7 @@
     "to": "给",
     "cc": "抄送",
     "bcc": "密送",
+    "replyTo": "回复至",
     "from": "发件人",
     "date": "日期",
     "subject": "主题",
@@ -397,8 +398,14 @@
   },
   "settingsGeneral": {
     "display": "显示",
-    "showTitleBar": "显示标题栏",
-    "showTitleBarHelp": "禁用以减少界面杂乱",
+    "titleBar": "标题栏",
+    "titleBarHelp": "选择标题栏样式（原生需要重启）",
+    "titleBarAerion": "Aerion",
+    "titleBarAerionDesc": "使用应用程序标题栏",
+    "titleBarNative": "原生",
+    "titleBarNativeDesc": "使用操作系统原生标题栏（需要重启）",
+    "titleBarDisable": "禁用",
+    "titleBarDisableDesc": "禁用以减少界面杂乱",
     "language": "语言",
     "theme": "主题",
     "themeHelp": "选择浅色、深色或跟随系统偏好",
@@ -432,8 +439,19 @@
     "themeLight": "浅色",
     "themeLightBlue": "浅色（蓝色）",
     "themeLightOrange": "浅色（橙色）",
+    "themeLightBalanced": "浅色（平衡）",
     "themeDark": "深色",
-    "themeDarkGray": "深色（灰色）"
+    "themeDarkGray": "深色（灰色）",
+    "themeDarkBalanced": "深色（平衡）",
+    "restartRequired": "需要重启",
+    "restartRequiredDescription": "标题栏更改将在重启 Aerion 后生效。",
+    "quitNow": "立即退出",
+    "restartLater": "稍后",
+    "alwaysLoadImages": "始终加载远程图片",
+    "alwaysLoadImagesHelp": "停用所有电子邮件的图片拦截。远程图片将自动加载。",
+    "alwaysLoadImagesWarningTitle": "隐私与安全风险",
+    "alwaysLoadImagesWarningDescription": "自动加载远程图片可能会暴露您的 IP 地址、确认您已阅读邮件，并允许发件人追踪您。确定要停用图片拦截吗？",
+    "disable": "停用"
   },
   "settingsAccounts": {
     "emailAccounts": "电子邮件账户",
@@ -897,7 +915,11 @@
     "switchToPlainText": "切换至纯文本",
     "insertImageUrl": "从网址插入图片",
     "insertImageFile": "从文件插入图片",
-    "removeLink": "移除链接"
+    "removeLink": "移除链接",
+    "insertTable": "插入表格",
+    "deleteTable": "删除表格",
+    "htmlMode": "编辑 HTML 源代码",
+    "visualMode": "可视化编辑器"
   },
   "attachment": {
     "open": "打开",

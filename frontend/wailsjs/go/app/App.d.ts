@@ -107,6 +107,8 @@ export function GetAccounts():Promise<Array<account.Account>>;
 
 export function GetAllAccountIdentities():Promise<Array<app.AccountIdentityGroup>>;
 
+export function GetAlwaysLoadImages():Promise<boolean>;
+
 export function GetAppInfo():Promise<app.AppInfo>;
 
 export function GetAttachment(arg1:string):Promise<message.Attachment>;
@@ -184,6 +186,8 @@ export function GetMessageListSortOrder():Promise<string>;
 export function GetMessageSource(arg1:string):Promise<string>;
 
 export function GetMessages(arg1:string,arg2:string,arg3:number,arg4:number):Promise<Array<message.MessageHeader>>;
+
+export function GetNativeTitleBar():Promise<boolean>;
 
 export function GetOAuthStatus(arg1:string):Promise<app.OAuthStatus>;
 
@@ -381,6 +385,8 @@ export function SetAccountEnabled(arg1:string,arg2:boolean):Promise<void>;
 
 export function SetAddressbookEnabled(arg1:string,arg2:boolean):Promise<void>;
 
+export function SetAlwaysLoadImages(arg1:boolean):Promise<void>;
+
 export function SetAutostart(arg1:boolean):Promise<void>;
 
 export function SetComposerFormat(arg1:string):Promise<void>;
@@ -402,6 +408,8 @@ export function SetMarkAsReadDelay(arg1:number):Promise<void>;
 export function SetMessageListDensity(arg1:string):Promise<void>;
 
 export function SetMessageListSortOrder(arg1:string):Promise<void>;
+
+export function SetNativeTitleBar(arg1:boolean):Promise<void>;
 
 export function SetPGPEncryptPolicy(arg1:string,arg2:string):Promise<void>;
 

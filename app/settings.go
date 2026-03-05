@@ -60,13 +60,13 @@ func (a *App) SetMessageListSortOrder(sortOrder string) error {
 }
 
 // GetThemeMode returns the current theme mode setting
-// Values: "system", "light", "light-blue", "light-orange", "dark", "dark-gray"
+// Values: "system", "light", "light-blue", "light-orange", "dark", "dark-gray", "dark-balanced"
 func (a *App) GetThemeMode() (string, error) {
 	return a.settingsStore.GetThemeMode()
 }
 
 // SetThemeMode sets the theme mode
-// Valid values: "system", "light", "light-blue", "light-orange", "dark", "dark-gray"
+// Valid values: "system", "light", "light-blue", "light-orange", "dark", "dark-gray", "dark-balanced"
 func (a *App) SetThemeMode(mode string) error {
 	if err := a.settingsStore.SetThemeMode(mode); err != nil {
 		return err
@@ -139,10 +139,14 @@ func (a *App) GetAutostart() (bool, error) {
 // SetAutostart sets whether Aerion starts on login.
 // Manages the XDG autostart .desktop file or Flatpak Background portal.
 func (a *App) SetAutostart(enabled bool) error {
+	// Check current value to avoid unnecessary OS-level changes
+	// (e.g., Flatpak Background portal D-Bus calls that may fail)
+	current, _ := a.settingsStore.GetAutostart()
+
 	if err := a.settingsStore.SetAutostart(enabled); err != nil {
 		return err
 	}
-	if a.autostartMgr == nil {
+	if a.autostartMgr == nil || current == enabled {
 		return nil
 	}
 	if enabled {
@@ -198,6 +202,33 @@ func (a *App) GetComposerFormat() (string, error) {
 // SetComposerFormat sets the default composer format
 func (a *App) SetComposerFormat(format string) error {
 	return a.settingsStore.SetComposerFormat(format)
+}
+
+// GetNativeTitleBar returns whether the native OS title bar is enabled
+func (a *App) GetNativeTitleBar() (bool, error) {
+	return a.settingsStore.GetNativeTitleBar()
+}
+
+// SetNativeTitleBar sets whether the native OS title bar is enabled.
+// Enabling auto-sets show_title_bar to false; disabling restores it to true.
+func (a *App) SetNativeTitleBar(enabled bool) error {
+	if err := a.settingsStore.SetNativeTitleBar(enabled); err != nil {
+		return err
+	}
+	if enabled {
+		return a.settingsStore.SetShowTitleBar(false)
+	}
+	return a.settingsStore.SetShowTitleBar(true)
+}
+
+// GetAlwaysLoadImages returns whether remote images should always be loaded
+func (a *App) GetAlwaysLoadImages() (bool, error) {
+	return a.settingsStore.GetAlwaysLoadImages()
+}
+
+// SetAlwaysLoadImages sets whether remote images should always be loaded
+func (a *App) SetAlwaysLoadImages(enabled bool) error {
+	return a.settingsStore.SetAlwaysLoadImages(enabled)
 }
 
 // AddImageAllowlist adds a domain or sender to the image allowlist

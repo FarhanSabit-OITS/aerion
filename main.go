@@ -11,6 +11,7 @@ import (
 
 	"github.com/hkdb/aerion/app"
 	"github.com/hkdb/aerion/internal/platform"
+	"github.com/hkdb/aerion/internal/settings"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
@@ -40,6 +41,7 @@ func DebugMode() bool {
 }
 
 func main() {
+	platform.MonitorGBMErrors()
 	flag.Parse()
 
 	// Check for mailto: URL in non-flag arguments
@@ -81,6 +83,12 @@ func runMainMode(mailtoData *app.MailtoData, rawMailtoArg string) {
 	}
 	defer lock.Unlock()
 
+	// Read native title bar setting before Wails init (Frameless is init-time only)
+	nativeTitleBar := false
+	if paths, err := platform.GetPaths(); err == nil {
+		nativeTitleBar = settings.ReadNativeTitleBar(paths.DatabasePath())
+	}
+
 	// Create an instance of the app structure
 	application := app.NewApp(DebugMode, *dbusNotify)
 	application.SingleInstanceLock = lock
@@ -102,7 +110,7 @@ func runMainMode(mailtoData *app.MailtoData, rawMailtoArg string) {
 		Height:      800,
 		MinWidth:    360,
 		MinHeight:   400,
-		Frameless:   true,
+		Frameless:   !nativeTitleBar,
 		StartHidden: true, // Hide until frontend is ready to prevent white flash
 		AssetServer: &assetserver.Options{
 			Assets: assets,
@@ -165,6 +173,12 @@ func runComposerMode() {
 		title = "Edit Draft"
 	}
 
+	// Read native title bar setting before Wails init (Frameless is init-time only)
+	composerNativeTitleBar := false
+	if paths, err := platform.GetPaths(); err == nil {
+		composerNativeTitleBar = settings.ReadNativeTitleBar(paths.DatabasePath())
+	}
+
 	// Create a custom asset handler that serves composer.html instead of index.html
 	composerAssetHandler := &composerAssetHandler{assets: assets}
 
@@ -175,7 +189,7 @@ func runComposerMode() {
 		Height:      600,
 		MinWidth:    500,
 		MinHeight:   400,
-		Frameless:   true,
+		Frameless:   !composerNativeTitleBar,
 		StartHidden: true, // Hide until frontend is ready to prevent white flash
 		AssetServer: &assetserver.Options{
 			// Don't provide Assets here - we use Handler exclusively

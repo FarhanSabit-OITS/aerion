@@ -182,6 +182,10 @@ export function GetAllAccountIdentities() {
   return window['go']['app']['App']['GetAllAccountIdentities']();
 }
 
+export function GetAlwaysLoadImages() {
+  return window['go']['app']['App']['GetAlwaysLoadImages']();
+}
+
 export function GetAppInfo() {
   return window['go']['app']['App']['GetAppInfo']();
 }
@@ -336,6 +340,10 @@ export function GetMessageSource(arg1) {
 
 export function GetMessages(arg1, arg2, arg3, arg4) {
   return window['go']['app']['App']['GetMessages'](arg1, arg2, arg3, arg4);
+}
+
+export function GetNativeTitleBar() {
+  return window['go']['app']['App']['GetNativeTitleBar']();
 }
 
 export function GetOAuthStatus(arg1) {
@@ -730,6 +738,10 @@ export function SetAddressbookEnabled(arg1, arg2) {
   return window['go']['app']['App']['SetAddressbookEnabled'](arg1, arg2);
 }
 
+export function SetAlwaysLoadImages(arg1) {
+  return window['go']['app']['App']['SetAlwaysLoadImages'](arg1);
+}
+
 export function SetAutostart(arg1) {
   return window['go']['app']['App']['SetAutostart'](arg1);
 }
@@ -772,6 +784,10 @@ export function SetMessageListDensity(arg1) {
 
 export function SetMessageListSortOrder(arg1) {
   return window['go']['app']['App']['SetMessageListSortOrder'](arg1);
+}
+
+export function SetNativeTitleBar(arg1) {
+  return window['go']['app']['App']['SetNativeTitleBar'](arg1);
 }
 
 export function SetPGPEncryptPolicy(arg1, arg2) {

@@ -161,7 +161,7 @@
 </script>
 
 <Dialog.Root bind:open onOpenChange={handleOpenChange}>
-  <Dialog.Content class="max-w-lg max-h-[90vh] overflow-y-auto">
+  <Dialog.Content class="max-w-2xl max-h-[90vh] overflow-y-auto">
     <Dialog.Header>
       <Dialog.Title>
         {identity ? $_('identity.editEmailTitle') : $_('identity.addEmailTitle')}

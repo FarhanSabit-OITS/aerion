@@ -128,6 +128,21 @@
   </provides>
 
   <releases>
+    <release version="0.1.30" date="2026-03-05">
+      <description>
+        <ul>
+          <li>Extracted theme logic from App.svelte into a dedicated Svelte store</li>
+          <li>Added a Dark (Balanced) theme</li>
+          <li>Added a Light (Balanced) theme</li>
+          <li>Added tables and HTML mode to signature composer</li>
+          <li>Added option to use native title bar/decorations - #53</li>
+          <li>Added display of reply-to, cc, and bcc if not empty - #54</li>
+          <li>Added always load image setting - #40</li>
+          <li>Fixed Cosmic Desktop bug - needs testing - #55</li>
+          <li>Added workaround instructions for GPU driver bugs - #56</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.1.29" date="2026-02-26">
       <description>
         <ul>

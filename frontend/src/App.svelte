@@ -13,7 +13,8 @@
   import CertificateDialog from './lib/components/settings/CertificateDialog.svelte'
   import { accountStore } from '$lib/stores/accounts.svelte'
   import { addToast } from '$lib/stores/toast'
-  import { loadSettings, getThemeMode, getShowTitleBar, getComposerMode, getMailtoMode, type ThemeMode } from '$lib/stores/settings.svelte'
+  import { loadSettings, getThemeMode, getShowTitleBar, getNativeTitleBar, getComposerMode, getMailtoMode } from '$lib/stores/settings.svelte'
+  import { initTheme, applyThemeFromMode, handleSystemThemeEvent, handleMediaQueryChange } from '$lib/stores/theme.svelte'
   import { loadUIState, saveUIState, paneConstraints } from '$lib/stores/uiState.svelte'
   import {
     type FocusablePane,
@@ -26,7 +27,7 @@
   } from '$lib/stores/keyboard.svelte'
   import { initLayout, getLayoutMode, getResponsiveView, showViewer, hideViewer, showSidebar, hideSidebar, isResponsive } from '$lib/stores/layout.svelte'
   // @ts-ignore - wailsjs path
-  import { PrepareReply, GetPendingMailto, GetDraft, MarkAsRead, MarkAsUnread, Star, Unstar, Archive, MarkAsSpam, MarkAsNotSpam, Undo, GetTermsAccepted, SetTermsAccepted, GetSystemTheme, RefreshWindowConstraints, AcceptCertificate, GetStartHiddenActive, CloseWindow, QuitApp, OpenComposerWindow } from '../wailsjs/go/app/App.js'
+  import { PrepareReply, GetPendingMailto, GetDraft, MarkAsRead, MarkAsUnread, Star, Unstar, Archive, MarkAsSpam, MarkAsNotSpam, Undo, GetTermsAccepted, SetTermsAccepted, RefreshWindowConstraints, AcceptCertificate, GetStartHiddenActive, CloseWindow, QuitApp, OpenComposerWindow } from '../wailsjs/go/app/App.js'
   // @ts-ignore - wailsjs path
   import { smtp, folder, certificate } from '../wailsjs/go/models'
   // @ts-ignore - wailsjs runtime
@@ -38,13 +39,6 @@
   let messageListRef: MessageList | null = null
   let viewerRef: ConversationViewer | null = null
   let messageListContainerRef: HTMLElement | null = null
-
-  // Theme state - follows stored preference or system
-  let theme = $state<ThemeMode>('light')
-
-  // Portal-based system theme (XDG Settings Portal on Linux)
-  let portalThemeAvailable = false
-  let portalTheme: 'light' | 'dark' = 'light'
 
   // React to theme mode changes from settings store
   $effect(() => {
@@ -231,19 +225,7 @@
 
     // Load application settings (including theme mode) and apply theme
     const storedThemeMode = await loadSettings()
-
-    // Try to get system theme from backend (XDG Settings Portal on Linux)
-    try {
-      const sysTheme = await GetSystemTheme()
-      if (sysTheme === 'light' || sysTheme === 'dark') {
-        portalThemeAvailable = true
-        portalTheme = sysTheme
-      }
-    } catch {
-      // Portal not available, will use matchMedia fallback
-    }
-
-    applyThemeFromMode(storedThemeMode)
+    await initTheme(storedThemeMode)
 
     // Check if terms have been accepted
     try {
@@ -289,23 +271,13 @@
 
     // Listen for system theme changes from backend (XDG Settings Portal)
     EventsOn('theme:system-preference', (newTheme: string) => {
-      if (newTheme === 'light' || newTheme === 'dark') {
-        portalThemeAvailable = true
-        portalTheme = newTheme
-        if (getThemeMode() === 'system') {
-          theme = portalTheme
-          applyTheme(theme)
-        }
-      }
+      handleSystemThemeEvent(newTheme)
     })
 
     // Listen for system theme changes via matchMedia (fallback when portal unavailable)
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
     mediaQuery.addEventListener('change', (e) => {
-      if (getThemeMode() === 'system' && !portalThemeAvailable) {
-        theme = e.matches ? 'dark' : 'light'
-        applyTheme(theme)
-      }
+      handleMediaQueryChange(e.matches)
     })
 
     // Show window after UI is ready (prevents white flash on startup)
@@ -333,33 +305,6 @@
       console.error('Failed to check pending mailto:', err)
     }
   })
-
-  function applyTheme(themeName: ThemeMode) {
-    document.documentElement.setAttribute('data-theme', themeName)
-
-    // Legacy: Also set .dark class for backwards compat
-    if (themeName.startsWith('dark')) {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-    }
-  }
-
-  // Apply theme based on mode setting (system/light/dark)
-  function applyThemeFromMode(mode: ThemeMode) {
-    if (mode === 'system') {
-      // Use portal-based theme if available, otherwise fall back to matchMedia
-      if (portalThemeAvailable) {
-        theme = portalTheme
-      } else {
-        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-        theme = mediaQuery.matches ? 'dark' : 'light'
-      }
-    } else {
-      theme = mode
-    }
-    applyTheme(theme)
-  }
 
   // Handle folder selection from sidebar (account tree)
   function handleFolderSelect(
@@ -1165,7 +1110,7 @@
 
 <div class="flex flex-col h-full w-full overflow-hidden bg-background">
   <!-- Custom Title Bar -->
-  {#if getShowTitleBar()}
+  {#if getShowTitleBar() && !getNativeTitleBar()}
     <TitleBar onClose={handleClose} />
   {/if}
 

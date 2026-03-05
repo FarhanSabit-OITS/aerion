@@ -26,20 +26,28 @@
     onCancel,
   }: Props = $props()
 
+  let closedByButton = false
+
   function handleOpenChange(isOpen: boolean) {
     open = isOpen
     if (!isOpen) {
-      onCancel?.()
+      if (!closedByButton) {
+        onCancel?.()
+      }
+      closedByButton = false
     }
   }
 
   function handleConfirm() {
+    closedByButton = true
+    open = false
     onConfirm()
   }
 
   function handleCancel() {
-    open = false
+    closedByButton = true
     onCancel?.()
+    open = false
   }
 </script>
 

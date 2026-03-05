@@ -4,6 +4,7 @@
   import { Label } from '$lib/components/ui/label'
   import { Input } from '$lib/components/ui/input'
   import Switch from '$lib/components/ui/switch/Switch.svelte'
+  import ConfirmDialog from '$lib/components/ui/confirm-dialog/ConfirmDialog.svelte'
   import { _, setLocale } from '$lib/i18n'
   import { supportedLocales } from '$lib/i18n'
 
@@ -11,38 +12,44 @@
     markAsReadDelaySeconds: number
     messageListDensity: string
     themeMode: string
+    nativeTitleBar: boolean
     showTitleBar: boolean
     runBackground: boolean
     startHidden: boolean
     autostart: boolean
     language: string
+    alwaysLoadImages: boolean
     onDelayChange: (value: number) => void
     onDensityChange: (value: string) => void
     onThemeChange: (value: string) => void
-    onShowTitleBarChange: (value: boolean) => void
+    onTitleBarChange: (nativeTitleBar: boolean, showTitleBar: boolean) => void
     onRunBackgroundChange: (value: boolean) => void
     onStartHiddenChange: (value: boolean) => void
     onAutostartChange: (value: boolean) => void
     onLanguageChange: (value: string) => void
+    onAlwaysLoadImagesChange: (value: boolean) => void
   }
 
   let {
     markAsReadDelaySeconds = $bindable(),
     messageListDensity = $bindable(),
     themeMode = $bindable(),
+    nativeTitleBar = $bindable(),
     showTitleBar = $bindable(),
     runBackground = $bindable(),
     startHidden = $bindable(),
     autostart = $bindable(),
     language = $bindable(),
+    alwaysLoadImages = $bindable(),
     onDelayChange,
     onDensityChange,
     onThemeChange,
-    onShowTitleBarChange,
+    onTitleBarChange,
     onRunBackgroundChange,
     onStartHiddenChange,
     onAutostartChange,
     onLanguageChange,
+    onAlwaysLoadImagesChange,
   }: Props = $props()
 
   // Message list density options
@@ -53,14 +60,27 @@
     { value: 'large', label: $_('settingsGeneral.densityLarge') },
   ])
 
+  // Title bar options
+  const titleBarOptions = $derived([
+    { value: 'aerion', label: $_('settingsGeneral.titleBarAerion'), description: $_('settingsGeneral.titleBarAerionDesc') },
+    { value: 'native', label: $_('settingsGeneral.titleBarNative'), description: $_('settingsGeneral.titleBarNativeDesc') },
+    { value: 'disable', label: $_('settingsGeneral.titleBarDisable'), description: $_('settingsGeneral.titleBarDisableDesc') },
+  ])
+
+  const titleBarValue = $derived(
+    nativeTitleBar ? 'native' : showTitleBar ? 'aerion' : 'disable'
+  )
+
   // Theme mode options
   const themeModeOptions = $derived([
     { value: 'system', label: $_('settingsGeneral.themeSystem') },
     { value: 'light', label: $_('settingsGeneral.themeLight') },
     { value: 'light-blue', label: $_('settingsGeneral.themeLightBlue') },
     { value: 'light-orange', label: $_('settingsGeneral.themeLightOrange') },
+    { value: 'light-balanced', label: $_('settingsGeneral.themeLightBalanced') },
     { value: 'dark', label: $_('settingsGeneral.themeDark') },
     { value: 'dark-gray', label: $_('settingsGeneral.themeDarkGray') },
+    { value: 'dark-balanced', label: $_('settingsGeneral.themeDarkBalanced') },
   ])
 
   function getDensityLabel(value: string): string {
@@ -86,9 +106,26 @@
     onThemeChange?.(value)
   }
 
-  function handleShowTitleBarChange(value: boolean) {
-    showTitleBar = value
-    onShowTitleBarChange?.(value)
+  function handleTitleBarChange(value: string) {
+    switch (value) {
+      case 'aerion':
+        nativeTitleBar = false
+        showTitleBar = true
+        break
+      case 'native':
+        nativeTitleBar = true
+        showTitleBar = false
+        break
+      case 'disable':
+        nativeTitleBar = false
+        showTitleBar = false
+        break
+    }
+    onTitleBarChange?.(nativeTitleBar, showTitleBar)
+  }
+
+  function getTitleBarLabel(value: string): string {
+    return titleBarOptions.find(opt => opt.value === value)?.label || value
   }
 
   function handleDelayInput(e: Event) {
@@ -126,6 +163,17 @@
     setLocale(value)
     onLanguageChange?.(value)
   }
+
+  let showAlwaysLoadImagesConfirm = $state(false)
+
+  function handleAlwaysLoadImagesChange(value: boolean) {
+    if (value) {
+      showAlwaysLoadImagesConfirm = true
+      return
+    }
+    alwaysLoadImages = false
+    onAlwaysLoadImagesChange?.(false)
+  }
 </script>
 
 <div class="space-y-6">
@@ -137,19 +185,22 @@
     </h3>
 
     <div class="space-y-2">
-      <div class="flex items-center justify-between">
-        <div class="space-y-0.5">
-          <Label for="show-title-bar">{$_('settingsGeneral.showTitleBar')}</Label>
-          <p class="text-xs text-muted-foreground">
-            {$_('settingsGeneral.showTitleBarHelp')}
-          </p>
-        </div>
-        <Switch
-          id="show-title-bar"
-          bind:checked={showTitleBar}
-          onCheckedChange={handleShowTitleBarChange}
-        />
-      </div>
+      <Label>{$_('settingsGeneral.titleBar')}</Label>
+      <Select.Root value={titleBarValue} onValueChange={handleTitleBarChange}>
+        <Select.Trigger>
+          <Select.Value>
+            {getTitleBarLabel(titleBarValue)}
+          </Select.Value>
+        </Select.Trigger>
+        <Select.Content>
+          {#each titleBarOptions as opt (opt.value)}
+            <Select.Item value={opt.value} label={opt.label} />
+          {/each}
+        </Select.Content>
+      </Select.Root>
+      <p class="text-xs text-muted-foreground">
+        {$_('settingsGeneral.titleBarHelp')}
+      </p>
     </div>
 
     <div class="space-y-2">
@@ -204,6 +255,21 @@
       <p class="text-xs text-muted-foreground">
         {$_('settingsGeneral.messageListDensityHelp')}
       </p>
+    </div>
+    <div class="space-y-2">
+      <div class="flex items-center justify-between">
+        <div class="space-y-0.5">
+          <Label for="always-load-images">{$_('settingsGeneral.alwaysLoadImages')}</Label>
+          <p class="text-xs text-muted-foreground">
+            {$_('settingsGeneral.alwaysLoadImagesHelp')}
+          </p>
+        </div>
+        <Switch
+          id="always-load-images"
+          bind:checked={alwaysLoadImages}
+          onCheckedChange={handleAlwaysLoadImagesChange}
+        />
+      </div>
     </div>
   </div>
 
@@ -309,3 +375,13 @@
   </div>
 
 </div>
+
+<ConfirmDialog
+  bind:open={showAlwaysLoadImagesConfirm}
+  title={$_('settingsGeneral.alwaysLoadImagesWarningTitle')}
+  description={$_('settingsGeneral.alwaysLoadImagesWarningDescription')}
+  confirmLabel={$_('settingsGeneral.disable')}
+  variant="destructive"
+  onConfirm={() => { onAlwaysLoadImagesChange?.(true) }}
+  onCancel={() => { alwaysLoadImages = false }}
+/>

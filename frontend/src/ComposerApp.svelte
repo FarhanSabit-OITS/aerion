@@ -9,17 +9,15 @@
   import { addToast } from '$lib/stores/toast'
   import { _ } from '$lib/i18n'
   import { createComposerWindowApi } from '$lib/composerApi'
-  import { getShowTitleBar, type ThemeMode } from '$lib/stores/settings.svelte'
+  import { getShowTitleBar, getNativeTitleBar } from '$lib/stores/settings.svelte'
+  import { initTheme, handleThemeChanged, type ThemeMode } from '$lib/stores/theme.svelte'
   // @ts-ignore - wailsjs imports
-  import { GetComposeMode, PrepareReply, GetDraft, CloseWindow, GetThemeMode, GetSystemTheme, RefreshWindowConstraints } from '../wailsjs/go/app/ComposerApp.js'
+  import { GetComposeMode, PrepareReply, GetDraft, CloseWindow, GetThemeMode, RefreshWindowConstraints } from '../wailsjs/go/app/ComposerApp.js'
   // @ts-ignore - wailsjs imports
   import { smtp, app } from '../wailsjs/go/models'
   // @ts-ignore - wailsjs runtime
   import { WindowMinimise, WindowToggleMaximise, WindowShow, Quit, EventsOn, EventsOff } from '../wailsjs/runtime/runtime'
 
-  // Theme state - follows system preference or main window theme
-  let theme = $state<ThemeMode>('light')
-  
   // Compose mode info from backend
   let composeMode = $state<app.ComposeMode | null>(null)
   let initialMessage = $state<smtp.ComposeMessage | null>(null)
@@ -45,35 +43,13 @@
   })
 
   onMount(async () => {
-    // Load saved theme mode from backend
+    // Load saved theme mode from backend and apply (probes XDG portal)
     try {
       const savedThemeMode = await GetThemeMode() as ThemeMode
-      if (savedThemeMode === 'system') {
-        // Try portal-based theme first (XDG Settings Portal on Linux)
-        let resolved = false
-        try {
-          const sysTheme = await GetSystemTheme()
-          if (sysTheme === 'light' || sysTheme === 'dark') {
-            theme = sysTheme as ThemeMode
-            resolved = true
-          }
-        } catch {
-          // Portal not available
-        }
-        // Fall back to matchMedia
-        if (!resolved) {
-          const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-          theme = mediaQuery.matches ? 'dark' : 'light'
-        }
-      } else {
-        theme = savedThemeMode
-      }
-      applyTheme(theme)
+      await initTheme(savedThemeMode)
     } catch (err) {
       console.error('Failed to load theme mode:', err)
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-      theme = mediaQuery.matches ? 'dark' : 'light'
-      applyTheme(theme)
+      await initTheme('system')
     }
 
     // Show window after theme is applied (prevents white flash on startup)
@@ -82,24 +58,9 @@
     // Remove GTK max size constraints that Wails v2 sets at startup
     RefreshWindowConstraints()
 
-    // Listen for system theme changes (only applies when mode is 'system')
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-    mediaQuery.addEventListener('change', (e) => {
-      // Only auto-switch if theme mode is 'system'
-      if (theme === 'system' || theme === 'light' || theme === 'dark') {
-        // This listener is for system mode only, but we keep it simple
-        // The main window will broadcast theme changes via IPC
-      }
-    })
-    
     // Listen for theme changes from main window via IPC
     EventsOn('theme:changed', (newTheme: string) => {
-      // Accept all valid theme modes
-      const validThemes: ThemeMode[] = ['system', 'light', 'light-blue', 'light-orange', 'dark', 'dark-gray']
-      if (validThemes.includes(newTheme as ThemeMode)) {
-        theme = newTheme as ThemeMode
-        applyTheme(theme)
-      }
+      handleThemeChanged(newTheme)
     })
     
     // Listen for shutdown request from main window
@@ -152,17 +113,6 @@
     EventsOff('app:shutdown')
   })
 
-  function applyTheme(themeName: ThemeMode) {
-    document.documentElement.setAttribute('data-theme', themeName)
-
-    // Legacy: Also set .dark class for backwards compat
-    if (themeName.startsWith('dark')) {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-    }
-  }
-  
   // Window control functions
   async function minimize() {
     await WindowMinimise()
@@ -200,7 +150,7 @@
 
 <div class="h-screen flex flex-col bg-background text-foreground">
   <!-- Custom Title Bar for frameless window -->
-  {#if getShowTitleBar()}
+  {#if getShowTitleBar() && !getNativeTitleBar()}
     <header class="h-10 flex items-center justify-between bg-muted/50 border-b border-border select-none shrink-0">
       <!-- Drag region - left side with title -->
       <div class="flex-1 flex items-center gap-2 px-3 h-full" style="--wails-draggable: drag">

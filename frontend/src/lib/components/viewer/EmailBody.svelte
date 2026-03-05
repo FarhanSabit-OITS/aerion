@@ -7,6 +7,7 @@
   import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
   import { _ } from '$lib/i18n'
   import { toasts } from '$lib/stores/toast'
+  import { getAlwaysLoadImages } from '$lib/stores/settings.svelte'
 
   interface Props {
     messageId: string
@@ -442,6 +443,11 @@ ${processedHtml}
   $effect(() => {
     const email = fromEmail
     const hasImages = hasRemoteImages
+
+    if (getAlwaysLoadImages()) {
+      imagesBlocked = false
+      return
+    }
 
     if (email && hasImages) {
       IsImageAllowed(email).then((allowed) => {
