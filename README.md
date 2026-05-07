@@ -137,6 +137,7 @@ Google verification requires apps like Aerion to recertify for CASA Tier 2 every
 
 
 ### 🔨 Contributing
+---
 
 Please see [CONTRIBUTING.md](CONTRIBUTING.md)
 
